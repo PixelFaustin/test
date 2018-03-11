@@ -1,0 +1,3 @@
+WGLRenderer will manage shaders
+
+Game will manage textures and other assets
