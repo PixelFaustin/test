@@ -106,6 +106,7 @@ class Game {
       this.canvas.height,
       this.backgroundTexture
     );
+
     this.renderer.drawSlidingTexture(
       0,
       this.canvas.height - this.cloudTexture.height,
@@ -116,24 +117,35 @@ class Game {
       this.cloudTexture
     );
 
-    this.renderer.drawTexture(200 + 40, 100, 0, 0, this.busBodyTexture);
+    const offset =
+      -this.busBodyTexture.width +
+      (performance.now() / 1000 * 250) % (1280 + this.busBodyTexture.width);
+    const yoffset = 30;
+
+    this.renderer.drawTexture(offset, 100 + yoffset, 0, 0, this.busBodyTexture);
     this.renderer.drawTextureRotated(
-      291 + 40,
-      60,
+      91 + offset,
+      60 + yoffset,
       0,
       0,
-      -performance.now() * 0.1,
+      -performance.now() * 0.5,
       this.busTireTexture
     );
     this.renderer.drawTextureRotated(
-      713 + 40,
-      60,
+      513 + offset,
+      60 + yoffset,
       0,
       0,
-      -performance.now() * 0.1,
+      -performance.now() * 0.5,
       this.busTireTexture
     );
-    this.renderer.drawTexture(620 + 40, 119, 0, 0, this.busDoorTexture);
+    this.renderer.drawTexture(
+      420 + offset,
+      119 + yoffset,
+      0,
+      0,
+      this.busDoorTexture
+    );
     this.renderer.drawSlidingTexture(
       0,
       this.canvas.height - this.cloudTexture.height - this.snowTexture.height,
