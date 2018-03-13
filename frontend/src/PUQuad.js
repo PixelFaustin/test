@@ -4,9 +4,6 @@ export default class PUQuad {
     this.positionVBO = null;
 
     this.vertices = [1, 1, -1, 1, -1, -1, -1, -1, 1, -1, 1, 1];
-    this.vertice = this.vertices.map(el => {
-      return el * 5;
-    });
     this.uvs = [1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0];
     this.indices = [0, 1, 2, 3, 4, 5];
     this.indexCount = this.indices.length;
@@ -42,10 +39,13 @@ export default class PUQuad {
     return this;
   };
 
-  bind = () => {
-    console.log('Binding quad: ', this.positionVBO, this.uvVBO, this.indexVBO);
+  bind = program => {
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionVBO);
+    program.setAttribPointer('a_position', 2, this.gl.FLOAT);
+
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.uvVBO);
+    program.setAttribPointer('a_uv', 2, this.gl.FLOAT);
+
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexVBO);
   };
 }

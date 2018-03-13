@@ -108,13 +108,12 @@ export default class ShaderProgram {
 
   enableAttribs = () => {
     Object.keys(this.attributeMap).forEach(attr => {
-      console.log(`Enabling attrib ${this.attributeMap[attr]} ${attr}`);
       this.gl.enableVertexAttribArray(this.attributeMap[attr]);
     });
   };
 
   bind = () => {
-    this.enableAttribs();
     this.gl.useProgram(this.program);
+    this.enableAttribs();
   };
 }

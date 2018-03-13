@@ -10,6 +10,10 @@ function uInt(gl, loc, value) {
   gl.uniform1i(loc, value);
 }
 
+function uFloat(gl, loc, value) {
+  gl.uniform1f(loc, value);
+}
+
 export default class WGLRenderer {
   constructor() {
     this.gl = undefined;
@@ -23,10 +27,12 @@ export default class WGLRenderer {
 
       if (!this.precompiled) {
         this.precompiled = true;
+        this.gl.enable(this.gl.BLEND);
+        this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
 
         Promise.all([
-          fetch('/shaders/box-game-vs.glsl'),
-          fetch('/shaders/box-game-fs.glsl')
+          fetch('/shaders/default-vs.glsl'),
+          fetch('/shaders/default-fs.glsl')
         ])
           .then(values => {
             return Promise.all([values[0].text(), values[1].text()]);
@@ -39,17 +45,21 @@ export default class WGLRenderer {
               .attachFragmentSrc(fragmentSrc)
               .build();
 
-            console.log(this.defaultProgram);
-
             const uniforms = {
               u_resolution: uVec2,
-              u_texture0: uInt
+              u_size: uVec2,
+              u_texture0: uInt,
+              u_position: uVec2,
+              u_time: uFloat,
+              u_panningSpeed: uVec2,
+              u_angle: uFloat
             };
             const attributes = ['a_position', 'a_uv'];
 
             this.defaultProgram.loadUniforms(uniforms);
             this.defaultProgram.loadAttributes(attributes);
             this.quad = new PUQuad(this.gl).build();
+            //this.quad = new PQuad(this.gl).build();
             resolve();
           });
       }
@@ -72,18 +82,55 @@ export default class WGLRenderer {
     }
   };
 
-  render = texture => {
+  render = texture => {};
+
+  drawTexture(x, y, width, height, texture) {
+    width = width || texture.width;
+    height = height || texture.height;
+
     this.defaultProgram.bind();
-    this.quad.bind();
-    this.defaultProgram.enableAttribs();
-    this.defaultProgram.setAttribPointer('a_position', 2, this.gl.FLOAT);
-    this.defaultProgram.setAttribPointer('a_uv', 2, this.gl.FLOAT);
-    //texture.bind();
+
+    this.quad.bind(this.defaultProgram);
+
+    texture.bind();
     this.defaultProgram.setUniform('u_resolution', [
       this.canvas.width,
       this.canvas.height
     ]);
+    this.defaultProgram.setUniform('u_size', [width, height]);
+    this.defaultProgram.setUniform('u_position', [x, y]);
     this.defaultProgram.setUniform('u_texture0', 0);
+    this.defaultProgram.setUniform('u_time', performance.now() / 1000);
+    this.defaultProgram.setUniform('u_panningSpeed', [0, 0]);
+    this.defaultProgram.setUniform('u_angle', 0);
+
+    this.gl.drawElements(
+      this.gl.TRIANGLES,
+      this.quad.indexCount,
+      this.gl.UNSIGNED_SHORT,
+      0
+    );
+  }
+
+  drawSlidingTexture = (x, y, width, height, x_speed, y_speed, texture) => {
+    width = width || texture.width;
+    height = height || texture.height;
+
+    this.defaultProgram.bind();
+
+    this.quad.bind(this.defaultProgram);
+
+    texture.bind();
+    this.defaultProgram.setUniform('u_resolution', [
+      this.canvas.width,
+      this.canvas.height
+    ]);
+    this.defaultProgram.setUniform('u_size', [width, height]);
+    this.defaultProgram.setUniform('u_position', [x, y]);
+    this.defaultProgram.setUniform('u_texture0', 0);
+    this.defaultProgram.setUniform('u_time', performance.now() / 1000);
+    this.defaultProgram.setUniform('u_panningSpeed', [x_speed, y_speed]);
+    this.defaultProgram.setUniform('u_angle', 0);
 
     this.gl.drawElements(
       this.gl.TRIANGLES,
@@ -93,7 +140,39 @@ export default class WGLRenderer {
     );
   };
 
-  drawTexture(x, y, texture) {}
+  drawTextureRotated = (x, y, width, height, angle, texture) => {
+    width = width || texture.width;
+    height = height || texture.height;
+
+    this.defaultProgram.bind();
+
+    this.quad.bind(this.defaultProgram);
+
+    texture.bind();
+    this.defaultProgram.setUniform('u_resolution', [
+      this.canvas.width,
+      this.canvas.height
+    ]);
+    this.defaultProgram.setUniform('u_size', [width, height]);
+    this.defaultProgram.setUniform('u_position', [x, y]);
+    this.defaultProgram.setUniform('u_texture0', 0);
+    this.defaultProgram.setUniform('u_time', performance.now() / 1000);
+    this.defaultProgram.setUniform('u_panningSpeed', [0, 0]);
+    this.defaultProgram.setUniform('u_angle', angle);
+
+    this.gl.drawElements(
+      this.gl.TRIANGLES,
+      this.quad.indexCount,
+      this.gl.UNSIGNED_SHORT,
+      0
+    );
+  };
+
+  drawPlatform = platform => {
+    this.drawTexture(...platform.position, 0, 0, platform.texture);
+  };
+
+  postprocessSnow = () => {};
 
   clear = () => {
     this.gl.clearColor(1, 0, 1, 1);
